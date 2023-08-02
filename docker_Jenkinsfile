@@ -1,0 +1,46 @@
+pipeline { 
+    agent any 
+    tools {
+        maven 'maven-3.9.1'
+    }
+    stages {
+        stage('checkout') { 
+            steps { 
+                cleanWs()
+                git branch: 'main', credentialsId: 'git-http', url: 'https://github.com/kamal-kant-jangir/demo.git' 
+            }
+        }
+        stage('build'){
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        stage('code quality check') {
+            steps {
+                sh 'mvn checkstyle:checkstyle pmd:pmd'
+                recordIssues(tools: [checkStyle()])
+                recordIssues(tools: [pmdParser()])
+            }
+        }
+        stage('code coverage') {
+            steps {
+                jacoco maximumBranchCoverage: '80', maximumClassCoverage: '80', maximumComplexityCoverage: '80', maximumInstructionCoverage: '80', maximumLineCoverage: '80', maximumMethodCoverage: '80', minimumBranchCoverage: '80', minimumClassCoverage: '80', minimumComplexityCoverage: '80', minimumInstructionCoverage: '80', minimumLineCoverage: '80', minimumMethodCoverage: '80'
+            }
+        }
+        stage('deploy') {
+            steps {
+                sh 'docker build -t demo .'
+                withCredentials([usernamePassword(credentialsId: 'docker', passwordVariable: 'upass', usernameVariable: 'uname')]) {
+                    sh 'docker login -u $uname -p $upass'
+                    sh 'docker tag demo:latest jangirkamal/jenkins-demo:latest'
+                    sh 'docker push jangirkamal/jenkins-repo:latest'
+                }
+            }
+        }
+    }
+}

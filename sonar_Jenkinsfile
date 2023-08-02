@@ -1,0 +1,24 @@
+pipeline { 
+    agent any 
+    tools {
+        maven 'maven-3.9.1'
+    }
+    stages {
+        stage('checkout') { 
+            steps { 
+                git branch: 'master', credentialsId: 'git-http', url: 'https://github.com/SonarSource/sonar-scanning-examples.git' 
+            }
+        }
+        stage('sonar') {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh '''
+                        cd sonarqube-scanner-maven/maven-basic
+                        mvn sonar:sonar -Dsonar.projectKey=demo -Dsonar.projectName='demo'
+                       
+                       '''
+                } 
+            }
+        }
+    }
+}

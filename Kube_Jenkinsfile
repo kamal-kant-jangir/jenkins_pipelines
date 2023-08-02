@@ -1,0 +1,26 @@
+pipeline { 
+    agent any
+    options {
+        withAWS(credentials: 'aws-cred')
+    }
+    stages {
+        stage('aws_cli') { 
+            steps { 
+                sh 'aws --version'
+            }
+        }
+        stage('k8s deployment') {
+            steps {
+                withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'kubeconfig', namespace: '', restrictKubeConfigAccess: false, serverUrl: 'server: https://390CD078201FEAFA1693C01BAAF42C29.gr7.us-east-1.eks.amazonaws.com') {
+                    sh '''
+                        kubectl get nodes
+                        kubectl create namespace n1
+                        kubectl get ns
+                        kubectl run pod1 --image=nginx -n n1 
+                        kubectl get pods -n n1
+                       '''
+                }              
+            }
+        }
+    }
+}
